@@ -71,7 +71,7 @@ dialog{border:none;border-radius:16px;padding:0;max-width:720px;width:calc(100% 
 .why{padding:10px 12px;border-radius:10px;background:color-mix(in srgb,var(--c) 12%,transparent);margin:8px 0;font-size:14px}
 .empty{padding:40px;text-align:center;color:var(--mut)}.foot{color:var(--mut);font-size:12px;margin-top:12px}
 .upb{height:8px;border-radius:99px;background:var(--line);overflow:hidden;margin-top:10px}.upb i{display:block;height:100%;width:0;background:var(--brand);transition:width .25s}.upb.ok i{background:var(--grn)}.upb.er i{background:var(--red)}#ups small{display:block;margin-top:5px;font-size:12px;line-height:1.4}
-</style></head><body>
+#gh label{display:block;font-size:12px;color:var(--mut)}#gh input{display:block;width:100%;box-sizing:border-box;padding:9px;margin:3px 0 10px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);font:inherit;font-size:14px}</style></head><body>
 <header><div class="ph"></div><div class="in"><svg class="ic" viewBox="0 0 120 120" width="104" height="104" aria-hidden="true"><circle cx="60" cy="60" r="56" fill="none" stroke="#fff" stroke-width="3"/><g fill="none" stroke="#fff" stroke-width="3" stroke-linejoin="round"><path d="M60 34 92 50 60 66 28 50Z"/><path d="M28 62 60 78 92 62"/><path d="M28 74 60 90 92 74"/></g></svg><div><h1>การบริหารสินค้ากระเบื้อง <em id="sz">16×16 นิ้ว</em></h1><p class="s">สรุปสต็อก • ยอดขาย • การหมุนเวียนสินค้า</p><p class="dt" id="asof"></p></div></div></header>
 <main>
 <div class="dxw"><div class="szs" id="szs"></div><div class="acts"><label class="btn p">อัปเดตไฟล์ Excel<input id="up" type="file" accept=".xlsx,.xls" hidden></label><details id="colw"><summary>รายละเอียด</summary><div class="pan"><small>ติ๊กหัวข้อที่ต้องการให้แสดงในตาราง และใส่ในไฟล์ดาวน์โหลด</small><div id="colp"></div><p><button class="btn p" id="dx">ดาวน์โหลดไฟล์ Excel (รายการที่แสดงอยู่)</button></p></div></details></div></div>
@@ -85,6 +85,14 @@ dialog{border:none;border-radius:16px;padding:0;max-width:720px;width:calc(100% 
 <div id="out"></div><p class="foot" id="foot"></p>
 </main>
 <dialog id="dl"></dialog>
+<dialog id="gh"><div style="padding:18px"><b style="font-size:16px">ส่งรูปขึ้น GitHub อัตโนมัติ</b>
+<p style="font-size:12px;color:var(--mut);margin:6px 0 12px;line-height:1.5">ตั้งค่าครั้งเดียวต่อเครื่อง เมื่อเปิดใช้ รูปที่อัปโหลดจะถูกย่อเป็น 600×600 แล้วส่งไปที่โฟลเดอร์ img/ ใน GitHub ทุกเครื่องจะเห็นหลังเว็บอัปเดต (1–2 นาที) Token เก็บไว้ในเครื่องนี้เท่านั้น ไม่ถูกส่งไปที่อื่นนอกจาก GitHub</p>
+<label>ชื่อบัญชี GitHub (username)<input id="gho" autocomplete="off" autocapitalize="none"></label>
+<label>ชื่อ repository เช่น tile-dashboard<input id="ghr" autocomplete="off" autocapitalize="none"></label>
+<label>Branch<input id="ghb" value="main" autocomplete="off" autocapitalize="none"></label>
+<label>Token (Fine-grained, สิทธิ์ Contents: Read and write)<input id="ght" type="password" autocomplete="off"></label>
+<div id="ghm" style="font-size:13px;min-height:20px;margin:4px 0 10px"></div>
+<p style="display:flex;gap:8px;flex-wrap:wrap;margin:0"><button class="btn" onclick="ghTest()">ทดสอบ</button><button class="btn" onclick="ghSave()">บันทึก</button><button class="btn" onclick="ghClear()">ลบการตั้งค่า</button><button class="btn" onclick="$('gh').close()">ปิด</button></p></div></dialog>
 <script src="data.js"></script>
 <script>
 const ZS=window.ZS_DATA;for(const k in ZS)ZS[k].forEach(r=>r[14]=k);let SZ='16*16',ROWS=ZS[SZ];const gr=()=>SZ=='ALL'?Object.values(ZS).flat():ZS[SZ];const ttl=()=>$('sz').textContent=SZ=='ALL'?'ทุกขนาด':SZ.replace('*','×')+' นิ้ว';const IMG=window.IMG_DATA;
@@ -104,8 +112,8 @@ $('asof').textContent='ข้อมูล ณ วันที่ '+ASOF.toLocale
 const bv=$('br').value;$('br').innerHTML='<option value="">ทุกแบรนด์</option>'+[...new Set(D.map(x=>x.brand))].sort().map(b=>`<option>${b}</option>`).join('');$('br').value=bv;
 const inp=(k,u,mn)=>`<input type="number" step="any" min="${mn}" data-k="${k}" value="${P[k]}"> ${u}`,cd=(s,r)=>`<div class="cf" style="--c:var(${ST[s].c})"><b>${ST[s].t}</b><div>${r}</div></div>`;
 $('set').innerHTML='<div class="cfg">'+cd('out','สต็อกเหลือ 0 (ไม่นับสินค้ายกเลิก)')+cd('cancel','สต็อกเหลือ 0 และชื่อลงท้ายด้วย * ** หรือ ***')+cd('nox','เข้าเงื่อนไขควรสั่งเติม แต่ชื่อลงท้ายด้วย * ** หรือ ***<br><small>* ตัดล็อต · ** ยกเลิกผลิต · *** ยกเลิกสั่ง</small>')+cd('low','พอขายไม่เกิน '+inp('low','เดือน',0)+'<br>เป้าสต็อกหลังสั่ง '+inp('target','เดือน',1))+cd('new','ซื้อเข้าล่าสุดภายใน <select data-k="newm">'+[1,2,3].map(n=>`<option${P.newm==n?' selected':''}>${n}</option>`).join('')+'</select> เดือน')+cd('over','พอขายเกิน '+inp('over','เดือน',0))+cd('slow','เฉลี่ยต่ำกว่า '+inp('slow','กล่อง/เดือน',0)+'<br>หรือไม่มีขายเกิน '+inp('days','วัน',0))+cd('dead','ไม่มียอดขายใน 9 เดือน')+cd('best','เฉลี่ยตั้งแต่ '+inp('best','กล่อง/เดือน',0))+cd('ok','ไม่เข้าเงื่อนไขอื่น')+'</div><small>ความพอขาย (เดือน) = สต็อก ÷ ยอดขายเฉลี่ยต่อเดือน (ตามช่วงค่าเฉลี่ยที่เลือก) · ลำดับการตัดสิน: ยกเลิก/ของหมด → ควรสั่งเติม → สินค้าใหม่ → อื่นๆ</small>';}
-const FULL=new Set(window.IMG_FULL||[]);
-const im=(x,big)=>{const c=x.code,t=IMG[c];if(!t)return'<div class="th"></div>';if(big&&FULL.has(c)&&!OV[c])return`<img class="th" loading="lazy" src="img/${encodeURIComponent(c)}.jpg" onerror="this.onerror=null;this.src=IMG['${c}']" alt="">`;return`<img class="th" loading="lazy" src="${t}" alt="">`};
+function imgErr(el,c){if(IMG[c]){el.onerror=null;el.src=IMG[c]}else{const d=document.createElement('div');d.className='th';el.replaceWith(d)}}
+const im=(x,big)=>{const c=x.code,t=IMG[c];if(OV[c]===null)return'<div class="th"></div>';if(OV[c]&&t)return`<img class="th" loading="lazy" src="${t}" alt="">`;if(!t||big)return`<img class="th" loading="lazy" src="img/${encodeURIComponent(c)}.jpg" onerror="imgErr(this,'${c}')" alt="">`;return`<img class="th" loading="lazy" src="${t}" alt="">`};
 const cv=x=>x.cov>=999?'ไม่มียอดขาย':f1(x.cov)+' เดือน';
 const ago=d=>d>=999?'–':d==0?'วันนี้':d+' วัน';
 const bd=x=>`<span class="b" style="--c:var(${ST[x.st].c})">${ST[x.st].t}</span>`;
@@ -152,7 +160,7 @@ document.querySelectorAll('[data-c]').forEach(e=>e.onclick=()=>show(e.dataset.c)
 function show(c){const x=D.find(d=>d.code==c),a=[x.s3/3,(x.s6-x.s3)/3,(x.s9-x.s6)/3],mx=Math.max(...a,1);
 const why={out:x.avg>0?'สต็อกเหลือ 0 และยังมียอดขาย เสียโอกาสขาย ควรสั่งด่วน':'สต็อกเหลือ 0 ไม่มียอดขายในช่วงที่เลือก พิจารณาก่อนสั่ง',low:`พอขายได้ ${cv(x)} ต่ำกว่าเกณฑ์ ${P.low} เดือน ควรสั่งเติม`,over:`สต็อกพอขาย ${cv(x)} เกินเกณฑ์ ${P.over} เดือน ไม่ควรสั่งเพิ่ม พิจารณาทำโปรโมชั่น`,slow:`ขายเฉลี่ย ${f1(x.avg)} กล่อง/เดือน หรือไม่มียอดขายนาน ${ago(x.ds)} ควรชะลอการสั่ง`,dead:'ไม่มียอดขายตลอด 9 เดือน ไม่ควรสั่งเพิ่ม ควรระบายสต็อก',best:'ขายดีและสต็อกเพียงพอ เฝ้าระวังไม่ให้ขาดสต็อก',ok:'ยอดขายและสต็อกอยู่ในเกณฑ์ปกติ',cancel:`สต็อกเหลือ 0 และชื่อลงท้ายด้วย ${'*'.repeat(x.star)} (${SN[x.star]}) ไม่ต้องสั่งเติม`,nox:`สต็อกใกล้หมด (พอขาย ${cv(x)}) แต่ชื่อลงท้ายด้วย ${'*'.repeat(x.star)} (${SN[x.star]}) จึงไม่ควรสั่งเติม`,new:`ซื้อเข้าล่าสุด ${dt(x.lb)} (ภายใน ${P.newm} เดือน) เป็นสินค้าใหม่ ยังประเมินยอดขายได้ไม่เต็มที่`}[x.st];
 const M=[['คงเหลือ',f(x.stock)+' กล่อง'],['โชว์ / เคลม',f1(x.show)+' / '+f(x.claim)],['ราคา/กล่อง',f(x.price)+' บาท'],['ขาย 3 เดือน',f(x.s3)],['ขาย 6 เดือน',f(x.s6)],['ขาย 9 เดือน',f(x.s9)],['พอขายได้',cv(x)],['ซื้อล่าสุด',dt(x.lb)],['ขายล่าสุด',dt(x.ls)],['มูลค่าสต็อก',f(x.val)+' บาท'],['แนะนำสั่งเพิ่ม',x.need?f(x.need)+' กล่อง':'–'],['ตำแหน่ง',x.loc]];
-$('dl').innerHTML=`<div class="dg"><div>${im(x,1)}<p style="margin:8px 0 0"><label class="btn">${IMG[x.code]?'เปลี่ยนรูป':'เพิ่มรูป'}<input type="file" accept="image/*" hidden onchange="setImg('${x.code}',this)"></label> ${IMG[x.code]?`<button class="btn" onclick="delImg('${x.code}')">ลบรูป</button>`:''}</p><div id="ups" data-c="${x.code}">${upsHtml(x.code)}</div></div><div><b style="font-size:17px">${x.name}</b><br><small style="color:var(--mut)">${x.code} · ${x.brand}</small><div class="why" style="--c:var(${ST[x.st].c})">${bd(x)} ${why}</div><div class="m">${M.map(m=>`<div>${m[0]}<b>${m[1]}</b></div>`).join('')}</div><small style="color:var(--mut)">ยอดขายเฉลี่ยต่อเดือน (เก่า → ใหม่)</small><div class="tr">${[2,1,0].map(i=>`<div><i style="height:${a[i]/mx*60}px"></i>${f1(a[i])}<br>${['0–3','3–6','6–9'][i]} ด.</div>`).join('')}</div><p style="text-align:right;margin:8px 0 0"><button class="btn" onclick="dl.close()">ปิด</button></p></div></div>`;if(!$('dl').open)$('dl').showModal()}
+$('dl').innerHTML=`<div class="dg"><div>${im(x,1)}<p style="margin:8px 0 0"><label class="btn">เพิ่ม/เปลี่ยนรูป<input type="file" accept="image/*" hidden onchange="setImg('${x.code}',this)"></label> ${IMG[x.code]?`<button class="btn" onclick="delImg('${x.code}')">ลบรูป</button>`:''}</p><div id="ups" data-c="${x.code}">${upsHtml(x.code)}</div><div style="margin-top:8px"><small><a href="#" onclick="ghOpen();return false" style="color:var(--mut)">⚙ ${GH?'ส่งขึ้น GitHub: เปิดอยู่':'ตั้งค่าส่งรูปขึ้น GitHub'}</a></small></div></div><div><b style="font-size:17px">${x.name}</b><br><small style="color:var(--mut)">${x.code} · ${x.brand}</small><div class="why" style="--c:var(${ST[x.st].c})">${bd(x)} ${why}</div><div class="m">${M.map(m=>`<div>${m[0]}<b>${m[1]}</b></div>`).join('')}</div><small style="color:var(--mut)">ยอดขายเฉลี่ยต่อเดือน (เก่า → ใหม่)</small><div class="tr">${[2,1,0].map(i=>`<div><i style="height:${a[i]/mx*60}px"></i>${f1(a[i])}<br>${['0–3','3–6','6–9'][i]} ด.</div>`).join('')}</div><p style="text-align:right;margin:8px 0 0"><button class="btn" onclick="dl.close()">ปิด</button></p></div></div>`;if(!$('dl').open)$('dl').showModal()}
 $('kpi'),['q','br','so'].forEach(i=>$(i).oninput=go);
 $('ni').onclick=()=>{NI=!NI;go()};
 $('vw').onclick=()=>{card=!card;$('vw').textContent=card?'มุมมองตาราง':'มุมมองการ์ด';go()};
@@ -179,19 +187,37 @@ function upsHtml(c){const u=UPS[c];if(!u)return'';return`<div class="upb ${u.k||
 function ups(c,p,m,k){UPS[c]={p,m,k};const e=document.getElementById('ups');if(e&&e.dataset.c==c)e.innerHTML=upsHtml(c)}
 const fr=()=>new Promise(r=>requestAnimationFrame(()=>setTimeout(r,80)));
 const fsz=n=>n>=1048576?(n/1048576).toFixed(1)+' MB':Math.max(1,Math.round(n/1024))+' KB';
-async function setImg(c,inp){const f=inp.files[0];if(!f)return;
+let GH=null;try{GH=JSON.parse(localStorage.getItem('tileGH')||'null')}catch(e){}
+function ghOpen(){const g=GH||{};$('gho').value=g.o||'';$('ghr').value=g.r||'';$('ghb').value=g.b||'main';$('ght').value=g.t||'';$('ghm').textContent=GH?'✓ เปิดใช้งานอยู่':'ยังไม่ได้ตั้งค่า';$('gh').showModal()}
+function ghRead(){return{o:$('gho').value.trim(),r:$('ghr').value.trim().replace(/\.git$/,''),b:$('ghb').value.trim()||'main',t:$('ght').value.trim()}}
+const ghH=g=>({'Authorization':'Bearer '+g.t,'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'});
+const ghU=(g,p)=>`https://api.github.com/repos/${encodeURIComponent(g.o)}/${encodeURIComponent(g.r)}/${p}`;
+function ghErr(s){return s==401?'Token ไม่ถูกต้องหรือหมดอายุ':s==403?'Token ไม่มีสิทธิ์เขียน (ต้องเป็น Contents: Read and write) หรือถูกจำกัดการใช้งาน':s==404?'ไม่พบ repository/branch นี้ หรือ token ไม่ครอบคลุม repository นี้':s==409||s==422?'ไฟล์ขัดแย้ง ลองอัปใหม่อีกครั้ง':'ผิดพลาด ('+s+')'}
+async function ghTest(){const g=ghRead(),m=$('ghm');if(!g.o||!g.r||!g.t){m.textContent='กรอกให้ครบทุกช่อง';return}m.textContent='กำลังทดสอบ…';try{const r=await fetch(ghU(g,'').replace(/\/$/,''),{headers:ghH(g)});if(r.ok){const j=await r.json();m.textContent='✓ เชื่อมต่อได้: '+j.full_name+(j.permissions&&!j.permissions.push?' (⚠ token ไม่มีสิทธิ์เขียน)':'')}else m.textContent='✕ '+ghErr(r.status)}catch(e){m.textContent='✕ เชื่อมต่อไม่ได้ ตรวจอินเทอร์เน็ต'}}
+function ghSave(){const g=ghRead(),m=$('ghm');if(!g.o||!g.r||!g.t){m.textContent='กรอกให้ครบทุกช่อง';return}GH=g;try{localStorage.setItem('tileGH',JSON.stringify(g))}catch(e){m.textContent='⚠ บันทึกในเครื่องไม่ได้ (ใช้ได้จนกว่าจะปิดหน้า)';return}m.textContent='✓ บันทึกแล้ว เปิดใช้งานส่งรูปขึ้น GitHub'}
+function ghClear(){GH=null;try{localStorage.removeItem('tileGH')}catch(e){}ghOpen();$('ghm').textContent='ลบการตั้งค่าแล้ว'}
+async function ghPut(c,dataUrl){const g=GH,p='contents/img/'+encodeURIComponent(c)+'.jpg';let sha;
+const q=await fetch(ghU(g,p)+'?ref='+encodeURIComponent(g.b),{headers:ghH(g),cache:'no-store'});
+if(q.ok)sha=(await q.json()).sha;else if(q.status!=404)throw new Error(ghErr(q.status));
+const body={message:'อัปเดตรูปสินค้า '+c,content:dataUrl.split(',')[1],branch:g.b};if(sha)body.sha=sha;
+const r=await fetch(ghU(g,p),{method:'PUT',headers:{...ghH(g),'Content-Type':'application/json'},body:JSON.stringify(body)});
+if(!r.ok)throw new Error(ghErr(r.status))}
+async function setImg(c,inp){const f=inp.files[0];if(!f)return;const n=GH?5:4;
 try{
 ups(c,3,'เริ่มอัปโหลด '+f.name+' ('+fsz(f.size)+')');await fr();
 if(f.size>25*1048576)throw new Error('ไฟล์ใหญ่เกิน 25 MB');
-const url=await new Promise((ok,no)=>{const r=new FileReader();r.onprogress=e=>{if(e.lengthComputable){const q=Math.round(e.loaded/e.total*100);ups(c,5+Math.round(q*.35),'1/4 กำลังอ่านไฟล์… '+q+'%')}};r.onload=()=>ok(r.result);r.onerror=()=>no(new Error('อ่านไฟล์ไม่ได้'));r.readAsDataURL(f)});
-ups(c,45,'2/4 กำลังเปิดรูป…');await fr();
+const url=await new Promise((ok,no)=>{const r=new FileReader();r.onprogress=e=>{if(e.lengthComputable){const q=Math.round(e.loaded/e.total*100);ups(c,5+Math.round(q*.3),'1/'+n+' กำลังอ่านไฟล์… '+q+'%')}};r.onload=()=>ok(r.result);r.onerror=()=>no(new Error('อ่านไฟล์ไม่ได้'));r.readAsDataURL(f)});
+ups(c,40,'2/'+n+' กำลังเปิดรูป…');await fr();
 const im=await new Promise((ok,no)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=()=>no(new Error('เปิดรูปไม่ได้ (ถ้าเป็นไฟล์ HEIC ให้แปลงเป็น JPG ก่อน)'));i.src=url});
-ups(c,65,'3/4 กำลังปรับรูปเป็น 600×600…');await fr();
+ups(c,55,'3/'+n+' กำลังปรับรูปเป็น 600×600…');await fr();
 const s=Math.min(im.width,im.height),cv=document.createElement('canvas');cv.width=cv.height=600;const g=cv.getContext('2d');g.imageSmoothingQuality='high';g.fillStyle='#fff';g.fillRect(0,0,600,600);g.drawImage(im,(im.width-s)/2,(im.height-s)/2,s,s,0,0,600,600);
 const d=cv.toDataURL('image/jpeg',.82);
-ups(c,85,'4/4 กำลังบันทึกในเครื่อง…');await fr();
-IMG[c]=OV[c]=d;const ok=sv();
-ups(c,100,ok?'✓ อัปโหลดสำเร็จ (600×600 · '+fsz(Math.round(d.length*.75))+') บันทึกแล้ว':'⚠ แสดงรูปได้ แต่บันทึกในเครื่องไม่ได้ (รูปจะหายเมื่อปิดหน้า)',ok?'ok':'er');
+ups(c,70,'4/'+n+' กำลังบันทึกในเครื่อง…');await fr();
+IMG[c]=OV[c]=d;const ok=sv();let gerr='',gok=false;
+if(GH){ups(c,85,'5/5 กำลังส่งขึ้น GitHub…');await fr();try{await ghPut(c,d);gok=true}catch(e){gerr=e instanceof TypeError?'เชื่อมต่อ GitHub ไม่ได้ (ตรวจอินเทอร์เน็ต)':e.message}}
+const inf=' (600×600 · '+fsz(Math.round(d.length*.75))+')';
+if(gerr)ups(c,100,'⚠ แสดงรูปในเครื่องนี้แล้ว แต่ส่งขึ้น GitHub ไม่สำเร็จ: '+gerr,'er');
+else ups(c,100,(ok?'✓ อัปโหลดสำเร็จ'+inf:'⚠ แสดงรูปได้ แต่บันทึกในเครื่องไม่ได้ (รูปจะหายเมื่อปิดหน้า)')+(gok?' · ส่งขึ้น GitHub แล้ว เครื่องอื่นจะเห็นใน 1–2 นาที':''),ok?'ok':'er');
 go();show(c)
 }catch(e){ups(c,100,'✕ อัปโหลดไม่สำเร็จ: '+e.message,'er');const x=document.getElementById('ups');if(!x)show(c)}
 inp.value=''}
